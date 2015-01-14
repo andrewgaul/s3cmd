@@ -309,7 +309,8 @@ test_s3cmd("Verify no test buckets", ['ls'],
 
 
 ## ====== Create one bucket (EU)
-test_s3cmd("Create one bucket (EU)", ['mb', '--bucket-location=EU', pbucket(1)],
+# TODO: Alternate regions not supported
+test_s3cmd("Create one bucket (EU)", ['mb', pbucket(1)],
     must_find = "Bucket '%s/' created" % pbucket(1))
 
 
@@ -423,7 +424,7 @@ test_s3cmd("Put public, guess MIME", ['put', '--guess-mime-type', '--acl-public'
 
 ## ====== Retrieve from URL
 if have_curl:
-    test_curl_HEAD("Retrieve from URL", 'http://%s.%s/xyz/etc/logo.png' % (bucket(1), cfg.host_base),
+    test_curl_HEAD("Retrieve from URL", 'http://%s/%s/xyz/etc/logo.png' % (cfg.host_base, bucket(1)),
                    must_find_re = ['Content-Length: 22059'])
 
 ## ====== Change ACL to Private
@@ -433,7 +434,7 @@ test_s3cmd("Change ACL to Private", ['setacl', '--acl-private', '%s/xyz/etc/l*.p
 
 ## ====== Verify Private ACL
 if have_curl:
-    test_curl_HEAD("Verify Private ACL", 'http://%s.%s/xyz/etc/logo.png' % (bucket(1), cfg.host_base),
+    test_curl_HEAD("Verify Private ACL", 'http://%s/%s/xyz/etc/logo.png' % (cfg.host_base, bucket(1)),
                    must_find_re = [ '403 Forbidden' ])
 
 
@@ -444,7 +445,7 @@ test_s3cmd("Change ACL to Public", ['setacl', '--acl-public', '--recursive', '%s
 
 ## ====== Verify Public ACL
 if have_curl:
-    test_curl_HEAD("Verify Public ACL", 'http://%s.%s/xyz/etc/logo.png' % (bucket(1), cfg.host_base),
+    test_curl_HEAD("Verify Public ACL", 'http://%s/%s/xyz/etc/logo.png' % (cfg.host_base, bucket(1)),
                    must_find_re = [ '200 OK',
                                     'Content-Length: 22059'])
 
@@ -542,7 +543,7 @@ test_s3cmd("Recursive copy, set ACL", ['cp', '-r', '--acl-public', '%s/xyz/' % p
 test_s3cmd("Verify ACL and MIME type", ['info', '%s/copy/etc2/Logo.PNG' % pbucket(2) ],
     must_find_re = [ "MIME type:.*image/png",
                      "ACL:.*\*anon\*: READ",
-                     "URL:.*http://%s.%s/copy/etc2/Logo.PNG" % (bucket(2), cfg.host_base) ])
+                     "URL:.*http://%s.%s/copy/etc2/Logo.PNG" % (cfg.host_base, bucket(2)) ])
 
 ## ====== modify MIME type
 test_s3cmd("Modify MIME type", ['modify', '--mime-type=binary/octet-stream', '%s/copy/etc2/Logo.PNG' % pbucket(2) ])
@@ -550,27 +551,27 @@ test_s3cmd("Modify MIME type", ['modify', '--mime-type=binary/octet-stream', '%s
 test_s3cmd("Verify ACL and MIME type", ['info', '%s/copy/etc2/Logo.PNG' % pbucket(2) ],
     must_find_re = [ "MIME type:.*binary/octet-stream",
                      "ACL:.*\*anon\*: READ",
-                     "URL:.*http://%s.%s/copy/etc2/Logo.PNG" % (bucket(2), cfg.host_base) ])
+                     "URL:.*http://%s/%s/copy/etc2/Logo.PNG" % (cfg.host_base, bucket(2)) ])
 
 test_s3cmd("Modify MIME type back", ['modify', '--mime-type=image/png', '%s/copy/etc2/Logo.PNG' % pbucket(2) ])
 
 test_s3cmd("Verify ACL and MIME type", ['info', '%s/copy/etc2/Logo.PNG' % pbucket(2) ],
     must_find_re = [ "MIME type:.*image/png",
                      "ACL:.*\*anon\*: READ",
-                     "URL:.*http://%s.%s/copy/etc2/Logo.PNG" % (bucket(2), cfg.host_base) ])
+                     "URL:.*http://%s.%s/copy/etc2/Logo.PNG" % (cfg.host_base, bucket(2)) ])
 
 test_s3cmd("Add cache-control header", ['modify', '--add-header=cache-control: max-age=3600, public', '%s/copy/etc2/Logo.PNG' % pbucket(2) ],
     must_find_re = [ "modify: .*" ])
 
 if have_curl:
-    test_curl_HEAD("HEAD check Cache-Control present", 'http://%s.%s/copy/etc2/Logo.PNG' % (bucket(2), cfg.host_base),
+    test_curl_HEAD("HEAD check Cache-Control present", 'http://%s/%s/copy/etc2/Logo.PNG' % (cfg.host_base, bucket(2)),
                    must_find_re = [ "Cache-Control: max-age=3600" ])
 
 test_s3cmd("Remove cache-control header", ['modify', '--remove-header=cache-control', '%s/copy/etc2/Logo.PNG' % pbucket(2) ],
            must_find_re = [ "modify: .*" ])
 
 if have_curl:
-    test_curl_HEAD("HEAD check Cache-Control not present", 'http://%s.%s/copy/etc2/Logo.PNG' % (bucket(2), cfg.host_base),
+    test_curl_HEAD("HEAD check Cache-Control not present", 'http://%s/%s/copy/etc2/Logo.PNG' % (cfg.host_base, bucket(2)),
                    must_not_find_re = [ "Cache-Control: max-age=3600" ])
 
 ## ====== sign
@@ -638,43 +639,65 @@ test_s3cmd("Simple delete with rm", ['rm', '%s/xyz/test_rm/TypeRa.ttf' % pbucket
     must_find = [ "delete: '%s/xyz/test_rm/TypeRa.ttf'" % pbucket(1) ])
 
 ## ====== Create expiration rule with days and prefix
+# TODO: Bucket expiration not supported
+False and \
 test_s3cmd("Create expiration rule with days and prefix", ['expire', pbucket(1), '--expiry-days=365', '--expiry-prefix=log/'],
     must_find = [ "Bucket '%s/': expiration configuration is set." % pbucket(1)])
 
 ## ====== Create expiration rule with date and prefix
+# TODO: Bucket expiration not supported
+False and \
 test_s3cmd("Create expiration rule with date and prefix", ['expire', pbucket(1), '--expiry-date=2012-12-31T00:00:00.000Z', '--expiry-prefix=log/'],
     must_find = [ "Bucket '%s/': expiration configuration is set." % pbucket(1)])
 
 ## ====== Create expiration rule with days only
+# TODO: Bucket expiration not supported
+False and \
 test_s3cmd("Create expiration rule with days only", ['expire', pbucket(1), '--expiry-days=365'],
     must_find = [ "Bucket '%s/': expiration configuration is set." % pbucket(1)])
 
 ## ====== Create expiration rule with date only
+# TODO: Bucket expiration not supported
+False and \
 test_s3cmd("Create expiration rule with date only", ['expire', pbucket(1), '--expiry-date=2012-12-31T00:00:00.000Z'],
     must_find = [ "Bucket '%s/': expiration configuration is set." % pbucket(1)])
 
 ## ====== Get current expiration setting
+# TODO: Bucket expiration not supported
+False and \
 test_s3cmd("Get current expiration setting", ['info', pbucket(1)],
     must_find = [ "Expiration Rule: all objects in this bucket will expire in '2012-12-31T00:00:00.000Z'"])
 
 ## ====== Delete expiration rule
+# TODO: Bucket expiration not supported
+False and \
 test_s3cmd("Delete expiration rule", ['expire', pbucket(1)],
     must_find = [ "Bucket '%s/': expiration configuration is deleted." % pbucket(1)])
 
 ## ====== set Requester Pays flag
+# TODO: Requester pays not supported
+False and \
 test_s3cmd("Set requester pays", ['payer', '--requester-pays', pbucket(2)])
 
 ## ====== get Requester Pays flag
+# TODO: Requester pays not supported
+False and \
 test_s3cmd("Get requester pays flag", ['info', pbucket(2)],
     must_find = [ "Payer:     Requester"])
 
 ## ====== ls using Requester Pays flag
+# TODO: Requester pays not supported
+False and \
 test_s3cmd("ls using requester pays flag", ['ls', '--requester-pays', pbucket(2)])
 
 ## ====== clear Requester Pays flag
+# TODO: Requester pays not supported
+False and \
 test_s3cmd("Clear requester pays", ['payer', pbucket(2)])
 
 ## ====== get Requester Pays flag
+# TODO: Requester pays not supported
+False and \
 test_s3cmd("Get requester pays flag", ['info', pbucket(2)],
     must_find = [ "Payer:     BucketOwner"])
 
