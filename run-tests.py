@@ -191,7 +191,7 @@ def test(label, cmd_args = [], retcode = 0, must_find = [], must_not_find = [], 
 def test_s3cmd(label, cmd_args = [], **kwargs):
     if not cmd_args[0].endswith("s3cmd"):
         cmd_args.insert(0, "python2")
-        cmd_args.insert(1, "s3cmd")
+        cmd_args.insert(1, "/home/gaul/work/s3cmd/s3cmd")
         if config_file:
             cmd_args.insert(2, "-c")
             cmd_args.insert(3, config_file)
